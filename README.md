@@ -1,36 +1,125 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Authorize.net Payment API
+
+A simple backend API for processing payments with Authorize.net. Built with Next.js API routes.
+
+## Features
+
+- Process payments through Authorize.net
+- No authentication required - all endpoints are public
+- SQLite database for storing transaction records
+- TypeScript for type safety
+
+## API Endpoints
+
+### Process Payment
+
+- **POST** `/api/payment/process`
+- Process a new payment through Authorize.net
+- Request body:
+
+```json
+{
+  "amount": number,
+  "cardNumber": string,
+  "expirationMonth": string,
+  "expirationYear": string,
+  "cvv": string,
+  "billingInfo": {
+    "firstName": string,
+    "lastName": string,
+    "address": string,
+    "city": string,
+    "state": string,
+    "zip": string
+  }
+}
+```
+
+- Response:
+
+```json
+{
+  "transactionId": string,
+  "status": "success" | "failed",
+  "message": string
+}
+```
+
+### Get Transaction Status
+
+- **GET** `/api/payment/transaction/:id`
+- Check the status of a transaction
+- Response:
+
+```json
+{
+  "transactionId": string,
+  "status": "success" | "failed",
+  "amount": number,
+  "cardLast4": string,
+  "errorMessage": string | null,
+  "createdAt": string
+}
+```
 
 ## Getting Started
 
-First, run the development server:
+1. Clone the repository
+
+2. Copy .env.example to .env and fill in your Authorize.net credentials:
+
+```env
+AUTHORIZE_NET_API_LOGIN_ID=your_login_id
+AUTHORIZE_NET_TRANSACTION_KEY=your_transaction_key
+AUTHORIZE_NET_ENVIRONMENT=SANDBOX # or PRODUCTION
+```
+
+3. Install dependencies:
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
+bun install
+```
+
+4. Initialize the database:
+
+```bash
+bunx prisma db push
+```
+
+5. Start the development server:
+
+```bash
 bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Environment Variables
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- `AUTHORIZE_NET_API_LOGIN_ID`: Your Authorize.net API Login ID
+- `AUTHORIZE_NET_TRANSACTION_KEY`: Your Authorize.net Transaction Key
+- `AUTHORIZE_NET_ENVIRONMENT`: Environment to use (SANDBOX or PRODUCTION)
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Database Schema
 
-## Learn More
+The project uses SQLite with Prisma ORM. Here's the main schema for transactions:
 
-To learn more about Next.js, take a look at the following resources:
+```prisma
+model Transaction {
+  id            String      @id @default(cuid())
+  amount        Float
+  status        String
+  transactionId String      @unique
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+}
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Error Handling
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+All API endpoints return standard error responses:
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```json
+{
+  "error": "Error message here",
+  "status": 400 // HTTP status code
+}
+```

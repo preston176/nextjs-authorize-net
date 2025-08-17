@@ -1,0 +1,22 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model Transaction {
+  id            String      @id @default(cuid())
+  amount        Float
+  status        String      // success, failed, pending
+  transactionId String      @unique  // Authorize.net transaction ID
+  errorMessage  String?     // Error message if status is failed
+  cardLast4     String?     // Last 4 digits of the card
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  @@index([status])
+  @@index([createdAt])
+}
